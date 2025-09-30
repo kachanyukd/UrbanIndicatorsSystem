@@ -100,7 +100,7 @@ document.getElementById("show-stats-btn").addEventListener("click", async () => 
         document.getElementById("show-stats-btn").style.display = "none";
         document.getElementById("hide-stats-btn").style.display = "inline-block";
     } catch (err) {
-        console.error("Error loading statistics:", err);
+        console.error("Error loading statistics:", err); //
     }
 });
 
