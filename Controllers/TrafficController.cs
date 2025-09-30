@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using UrbanIndicatorsSystem.Models;
 using UrbanIndicatorsSystem.Services;
 
 namespace UrbanIndicatorsSystem.Controllers
@@ -15,11 +14,10 @@ namespace UrbanIndicatorsSystem.Controllers
             _trafficService = trafficService;
         }
 
-        [HttpGet("{area}")]
-        public IActionResult GetTraffic(string area)
+        [HttpGet]
+        public IActionResult GetTrafficData()
         {
-            var trafficData = _trafficService.GetTrafficForArea(area);
-            return Ok(trafficData);
+            return Ok(_trafficService.GetTrafficData());
         }
     }
 }

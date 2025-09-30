@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Urban Indicators System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Traffic Simulation</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Urban Indicators System</h1>
+    <div id="clock"></div>
+    <h1>Urban Traffic Simulation</h1>
+
+    <button id="show-stats-btn">Statistics</button>
+    <button id="hide-stats-btn" style="display:none;">Hide Statistics</button>
+
+    <div id="traffic-container"></div>
+    <canvas id="trafficChart" style="display:none;"></canvas>
+
     <script src="scripts.js"></script>
 </body>
 </html>

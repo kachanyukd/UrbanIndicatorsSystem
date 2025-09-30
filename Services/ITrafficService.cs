@@ -5,6 +5,7 @@ namespace UrbanIndicatorsSystem.Services
 {
     public interface ITrafficService
     {
-        IEnumerable<TrafficData> GetTrafficForArea(string areaName);
+        List<TrafficData> GetTrafficData();
+        void SimulateTraffic();
     }
 }

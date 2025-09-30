@@ -5,6 +5,6 @@ namespace UrbanIndicatorsSystem.Services
 {
     public interface IAreaService
     {
-        IEnumerable<Area> GetAreas();
+        List<Area> GetAreas();
     }
 }

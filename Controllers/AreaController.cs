@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using UrbanIndicatorsSystem.Models;
 using UrbanIndicatorsSystem.Services;
 
 namespace UrbanIndicatorsSystem.Controllers
@@ -18,8 +17,7 @@ namespace UrbanIndicatorsSystem.Controllers
         [HttpGet]
         public IActionResult GetAreas()
         {
-            var areas = _areaService.GetAreas();
-            return Ok(areas);
+            return Ok(_areaService.GetAreas());
         }
     }
 }
