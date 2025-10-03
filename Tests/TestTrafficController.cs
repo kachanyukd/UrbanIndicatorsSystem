@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using UrbanIndicatorsSystem.Controllers;
+using UrbanIndicatorsSystem.Models;
 using UrbanIndicatorsSystem.Services;
 using Xunit;
 
@@ -26,6 +27,21 @@ namespace UrbanIndicatorsSystem.Tests
         }
 
         [Fact]
-        
+
+        public void GetTrafficData_ReturnsOkResult_WithTrafficData()
+        {
+            var expectedTrafficData = new List<TrafficData>
+            {
+                new TrafficData { RoadName = "Test Road", TrafficLevel = "Low"}
+            };
+            _mockTrafficService.Setup(s => s.GetTrafficData()).Returns(expectedTrafficData);
+
+            var result = _controller.GetTrafficData();
+
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var actualTrafficData = Assert.IsAssignableFrom<IEnumerable<TrafficData>>(okResult.Value);
+            Assert.Equal(expectedTrafficData, actualTrafficData);
+            _mockTrafficService.Verify(s => s.GetTrafficData(), Times.Once);
+        }
     }
 }
