@@ -16,5 +16,16 @@ namespace UrbanIndicatorsSystem.Tests
             _mockTrafficService = new Mock<ITrafficService>();
             _controller = new TrafficController(_mockTrafficService.Object);
         }
+
+        [Fact]
+        public void Constructor_InitializesTrafficService()
+        {
+            var controller = new TrafficController(_mockTrafficService.Object);
+
+            Assert.NotNull(controller);
+        }
+
+        [Fact]
+        
     }
 }
