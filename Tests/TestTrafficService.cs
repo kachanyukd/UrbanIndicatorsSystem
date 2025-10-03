@@ -55,35 +55,48 @@ namespace UrbanIndicatorsSystem.Tests
             Assert.Contains(result, t => t.RoadName == "Obolonskiy" && t.TrafficLevel == "Comfortable");
         }
 
-        
+
 
         [Fact]
         public void SimulateTraffic_UsesValidTrafficLevels()
         {
-            
+
             var validLevels = new[] { "Low", "Comfortable", "Moderate", "Medium", "High" };
 
-            
+
             _service.SimulateTraffic();
             var result = _service.GetTrafficData();
 
-            
-            Assert.All(result, traffic => 
+
+            Assert.All(result, traffic =>
                 Assert.Contains(traffic.TrafficLevel, validLevels));
         }
 
         [Fact]
         public void SimulateTraffic_DoesNotChangeRoadNames()
         {
-            
+
             var originalRoadNames = _service.GetTrafficData().Select(t => t.RoadName).ToList();
 
-            
+
             _service.SimulateTraffic();
             var updatedRoadNames = _service.GetTrafficData().Select(t => t.RoadName).ToList();
 
-            
+
             Assert.Equal(originalRoadNames, updatedRoadNames);
+        }
+        
+        
+
+        [Fact]
+        public void GetTrafficData_ReturnsSameInstanceOnMultipleCalls()
+        {
+            
+            var firstCall = _service.GetTrafficData();
+            var secondCall = _service.GetTrafficData();
+
+            
+            Assert.Same(firstCall, secondCall);
         }
     }
 }
