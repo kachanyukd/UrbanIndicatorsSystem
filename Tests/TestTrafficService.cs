@@ -14,5 +14,16 @@ namespace UrbanIndicatorsSystem.Tests
         {
             _service = new TrafficService();
         }
+
+        [Fact]
+        public void Constructor_InitializesTrafficDataWithSixRoads()
+        {
+            // Act
+            var result = _service.GetTrafficData();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(6, result.Count);
+        }
     }
 }
