@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
     export DOTNET_ROOT=$HOME/dotnet
     export PATH=$PATH:$HOME/dotnet
 
-    # Клонування твого репозиторію
+    # Клонування репозиторію
     cd /home/vagrant
     git clone https://github.com/kachanyukd/UrbanIndicatorsSystem.git
     cd UrbanIndicatorsSystem
