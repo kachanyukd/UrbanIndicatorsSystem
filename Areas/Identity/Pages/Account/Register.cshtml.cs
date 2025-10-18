@@ -71,32 +71,38 @@ namespace _.Areas.Identity.Pages.Account
         /// </summary>
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
+            [Required(ErrorMessage = "Username є обов'язковим")]
+            [StringLength(50, ErrorMessage = "Username має бути не довшим за 50 символів.")]
+            [Display(Name = "Username")]
+            public string Username { get; set; }
+
+            [Required(ErrorMessage = "Full Name є обов'язковим")]
+            [StringLength(500, ErrorMessage = "Full Name має бути не довшим за 500 символів.")]
+            [Display(Name = "Full Name")]
+            public string FullName { get; set; }
+
             [Required]
-            [EmailAddress]
+            [EmailAddress(ErrorMessage = "Некоректний формат Email (RFC 822)")]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [Phone]
+            [RegularExpression(@"^\+380\d{9}$", ErrorMessage = "Невірний формат. Потрібен +380xxxxxxxxx")]
+            [Display(Name = "Телефон (+380...)")]
+            public string PhoneNumber { get; set; }
+
+            [Required]
+            [StringLength(16, ErrorMessage = "{0} має бути від {2} до {1} символів.", MinimumLength = 8)]
             [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$",
+                ErrorMessage = "Пароль має містити 1 цифру, 1 спец. символ (напр. !@#), 1 велику літеру.")]
+            [Display(Name = "Пароль")]
             public string Password { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Display(Name = "Підтвердження паролю")]
+            [Compare("Password", ErrorMessage = "Паролі не співпадають.")]
             public string ConfirmPassword { get; set; }
         }
 
@@ -115,7 +121,10 @@ namespace _.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
 
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+                user.FullName = Input.FullName;
+                user.PhoneNumber = Input.PhoneNumber;
+                
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
