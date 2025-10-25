@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using UrbanIndicatorsSystem.Services;
+using System.Threading.Tasks;
 
 namespace UrbanIndicatorsSystem.Controllers
 {
@@ -15,9 +16,10 @@ namespace UrbanIndicatorsSystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetTrafficData()
+        public async Task<IActionResult> GetTrafficData()
         {
-            return Ok(_trafficService.GetTrafficData());
+            var data = await _trafficService.GetTrafficData();
+            return Ok(data);
         }
     }
 }

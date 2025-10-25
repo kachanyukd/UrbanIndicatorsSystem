@@ -3,14 +3,20 @@ using UrbanIndicatorsSystem.Data;
 using UrbanIndicatorsSystem.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// ========================
+// 1) IDENTITY + SQLITE
+// ========================
+var sqliteConnection = builder.Configuration.GetConnectionString("Sqlite") 
+    ?? throw new InvalidOperationException("Sqlite connection string not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlite(sqliteConnection));
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
@@ -19,22 +25,49 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 8;
     options.User.RequireUniqueEmail = true;
-
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+// ========================
+// 2) BUSINESS DB → POSTGRES
+// ========================
+builder.Services.AddDbContext<TrafficDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+
+// ========================
+// 3) REDIS (Session + Cache)
+// ========================
+if (builder.Configuration.GetSection("Redis").GetValue<bool>("Enabled"))
 {
-    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-});
+    var redisHost = builder.Configuration["Redis:Host"];
+    var redisPort = builder.Configuration["Redis:Port"];
+    var redis = ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}");
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
 
-builder.Services.AddRazorPages();
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = $"{redisHost}:{redisPort}";
+        options.InstanceName = builder.Configuration["Redis:InstanceName"];
+    });
 
+    builder.Services.AddSession(options =>
+    {
+        options.IdleTimeout = TimeSpan.FromMinutes(30);
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+    });
+}
+
+// ========================
+// DISCOVERY + CONTROLLERS
+// ========================
 builder.Services.AddControllers();
+builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<ITrafficService, TrafficService>();
+
+// BUSINESS LOGIC
+builder.Services.AddScoped<ITrafficService, TrafficService>(); // now will use TrafficDbContext
 
 var app = builder.Build();
 
@@ -46,13 +79,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
+if (builder.Configuration.GetSection("Redis").GetValue<bool>("Enabled"))
+{
+    app.UseSession();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.MapRazorPages();
-
 app.MapGet("/", () => Results.Redirect("/Index"));
 
 app.Run();

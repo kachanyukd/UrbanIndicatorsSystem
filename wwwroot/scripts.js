@@ -1,4 +1,9 @@
+let autoUpdateEnabled = true;
+let currentChart = null;
+
 async function loadTrafficData() {
+    if (!autoUpdateEnabled) return; 
+
     try {
         const response = await fetch('/api/traffic');
         const data = await response.json();
@@ -54,10 +59,14 @@ function showStatistics(data) {
     const chartContainer = document.getElementById("trafficChart");
     chartContainer.style.display = "block";
 
+    if (currentChart) {
+        currentChart.destroy(); 
+    }
+
     const labels = data.map(item => item.roadName);
     const trafficLevels = data.map(item => trafficLevelToNumber(item.trafficLevel));
 
-    new Chart(chartContainer, {
+    currentChart = new Chart(chartContainer, {
         type: 'bar',
         data: {
             labels: labels,
@@ -70,12 +79,7 @@ function showStatistics(data) {
             }]
         },
         options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 5
-                }
-            }
+            scales: { y: { beginAtZero: true, max: 5 } }
         }
     });
 }
@@ -114,4 +118,4 @@ setInterval(updateClock, 1000);
 updateClock();
 
 loadTrafficData();
-setInterval(loadTrafficData, 15000);
+setInterval(loadTrafficData, 15000); 
