@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace _.Pages
 {
-    [Authorize] // <--- Закриваємо сторінку від неавторизованих
+    [Authorize]
     public class TrafficModel : PageModel
     {
         public void OnGet()

@@ -1,11 +1,12 @@
 using UrbanIndicatorsSystem.Models;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace UrbanIndicatorsSystem.Services
 {
     public interface ITrafficService
     {
-        List<TrafficData> GetTrafficData();
-        void SimulateTraffic();
+        Task<List<TrafficData>> GetTrafficData();
+        Task SimulateTraffic();
     }
 }

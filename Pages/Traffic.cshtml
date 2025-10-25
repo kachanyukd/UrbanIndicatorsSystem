@@ -10,12 +10,49 @@
 <div id="clock"></div>
 <h1>Urban Traffic Simulation</h1>
 
+<button id="search-btn">Search</button>
 <button id="show-stats-btn">Statistics</button>
 <button id="hide-stats-btn" style="display:none;">Hide Statistics</button>
 
+<div id="search-panel" style="display:none; margin-top: 20px;">
+    <h2>Search Filters</h2>
+
+    <label>Road Name:</label>
+    <input type="text" id="roadName" placeholder="Exact match">
+
+    <label>Starts With:</label>
+    <input type="text" id="startsWith" placeholder="e.g. Shev">
+
+    <label>Ends With:</label>
+    <input type="text" id="endsWith" placeholder="e.g. skyi">
+
+    <label>Traffic Level:</label>
+    <select id="trafficLevel">
+        <option value="">-- Any --</option>
+        <option value="Low">Low</option>
+        <option value="Comfortable">Comfortable</option>
+        <option value="Moderate">Moderate</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+    </select>
+
+    <label>From (Date & Time):</label>
+    <input type="datetime-local" id="from">
+
+    <label>To (Date & Time):</label>
+    <input type="datetime-local" id="to">
+
+    <button id="apply-search-btn">Apply Search</button>
+    <button id="reset-search-btn">Reset</button>
+</div>
+
+<hr>
+
 <div id="traffic-container"></div>
+
 <canvas id="trafficChart" style="display:none;"></canvas>
 
 @section Scripts {
     <script src="~/scripts.js"></script>
+    <script src="~/search.js"></script> 
 }
