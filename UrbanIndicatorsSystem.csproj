@@ -4,10 +4,21 @@
   <TargetFramework>net9.0</TargetFramework>
   <Nullable>enable</Nullable>
   <ImplicitUsings>enable</ImplicitUsings>
-  <RootNamespace>_</RootNamespace>
+  <RootNamespace>UrbanIndicatorsSystem</RootNamespace>
   <UseAppHost>false</UseAppHost>
+  <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <UserSecretsId>f446043e-ca39-4fbe-9ad8-111e1141943d</UserSecretsId>
+    <!-- Set to true to enable automatic code generation before build -->
+    <GenerateCodeOnBuild>false</GenerateCodeOnBuild>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
   </PropertyGroup>
+
+  <!-- Exclude Generated folder from default compilation to avoid duplicates -->
+  <ItemGroup>
+    <Compile Remove="Generated\**" />
+    <EmbeddedResource Remove="Generated\**" />
+    <None Remove="Generated\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.10" />
@@ -36,5 +47,35 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
+  <!-- Ensure Generated directory exists -->
+  <Target Name="EnsureGeneratedFolder" BeforeTargets="GenerateCode">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Generated" Condition="!Exists('$(MSBuildProjectDirectory)\Generated')" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Generated\Controllers" Condition="!Exists('$(MSBuildProjectDirectory)\Generated\Controllers')" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Generated\DTOs" Condition="!Exists('$(MSBuildProjectDirectory)\Generated\DTOs')" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Generated\Services" Condition="!Exists('$(MSBuildProjectDirectory)\Generated\Services')" />
+  </Target>
+
+  <!-- Auto-generate code before compilation -->
+  <Target Name="GenerateCode" BeforeTargets="BeforeCompile" Condition="'$(GenerateCodeOnBuild)' == 'true' AND !Exists('Generated')">
+    <Message Text="🔄 Generating code from entity configurations..." Importance="high" />
+    
+    <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)\CodeGeneration\CodeGenerator.csproj&quot; --configuration $(Configuration)" 
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ContinueOnError="false" />
+    
+    <Message Text="✅ Code generation completed successfully" Importance="high" />
+    
+    <!-- Re-include generated files after generation -->
+    <ItemGroup>
+      <Compile Include="Generated\**\*.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Clean generated files on Clean -->
+  <Target Name="CleanGeneratedFiles" BeforeTargets="Clean">
+    <Message Text="🧹 Cleaning generated files..." Importance="high" />
+    <RemoveDir Directories="$(MSBuildProjectDirectory)\Generated" Condition="Exists('$(MSBuildProjectDirectory)\Generated')" />
+  </Target>
 
 </Project>
