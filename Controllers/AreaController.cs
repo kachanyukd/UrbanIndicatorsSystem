@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using UrbanIndicatorsSystem.Services;
+using Microsoft.EntityFrameworkCore;
+using UrbanIndicatorsSystem.Data;
+using UrbanIndicatorsSystem.Models;
 
 namespace UrbanIndicatorsSystem.Controllers
 {
@@ -7,17 +9,52 @@ namespace UrbanIndicatorsSystem.Controllers
     [Route("api/[controller]")]
     public class AreaController : ControllerBase
     {
-        private readonly IAreaService _areaService;
+        private readonly TrafficDbContext _context;
 
-        public AreaController(IAreaService areaService)
+        public AreaController(TrafficDbContext context)
         {
-            _areaService = areaService;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetAreas()
+        public async Task<ActionResult<IEnumerable<Area>>> GetAll()
         {
-            return Ok(_areaService.GetAreas());
+            return await _context.Areas.ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Area>> GetById(int id)
+        {
+            var area = await _context.Areas.FindAsync(id);
+            if (area == null) return NotFound();
+            return area;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Area>> Create(Area area)
+        {
+            _context.Areas.Add(area);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetById), new { id = area.Id }, area);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, Area area)
+        {
+            if (id != area.Id) return BadRequest();
+            _context.Entry(area).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var area = await _context.Areas.FindAsync(id);
+            if (area == null) return NotFound();
+            _context.Areas.Remove(area);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
     }
 }

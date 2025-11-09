@@ -1,0 +1,116 @@
+<#@ template language="C#" #>
+<#@ parameter name="EntityName" type="System.String" #>
+<#@ parameter name="Namespace" type="System.String" #>
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using <#= Namespace #>.Data;
+using <#= Namespace #>.Models;
+
+namespace <#= Namespace #>.Controllers.Generated
+{
+    /// <summary>
+    /// Auto-generated REST API Controller for <#= EntityName #>
+    /// Generated on: <#= DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") #>
+    /// </summary>
+    [ApiController]
+    [Route("api/[controller]")]
+    public class <#= EntityName #>Controller : ControllerBase
+    {
+        private readonly TrafficDbContext _context;
+
+        public <#= EntityName #>Controller(TrafficDbContext context)
+        {
+            _context = context;
+        }
+
+        /// <summary>
+        /// Get all <#= EntityName #> entities
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<<#= EntityName #>>>> GetAll()
+        {
+            return await _context.<#= EntityName #>.ToListAsync();
+        }
+
+        /// <summary>
+        /// Get a specific <#= EntityName #> by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<<#= EntityName #>>> GetById(int id)
+        {
+            var entity = await _context.<#= EntityName #>.FindAsync(id);
+            
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            
+            return entity;
+        }
+
+        /// <summary>
+        /// Create a new <#= EntityName #>
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult<<#= EntityName #>>> Create(<#= EntityName #> entity)
+        {
+            _context.<#= EntityName #>.Add(entity);
+            await _context.SaveChangesAsync();
+            
+            return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
+        }
+
+        /// <summary>
+        /// Update an existing <#= EntityName #>
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, <#= EntityName #> entity)
+        {
+            if (id != entity.Id)
+            {
+                return BadRequest();
+            }
+            
+            _context.Entry(entity).State = EntityState.Modified;
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await EntityExists(id))
+                {
+                    return NotFound();
+                }
+                throw;
+            }
+            
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Delete a <#= EntityName #>
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var entity = await _context.<#= EntityName #>.FindAsync(id);
+            
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            
+            _context.<#= EntityName #>.Remove(entity);
+            await _context.SaveChangesAsync();
+            
+            return NoContent();
+        }
+
+        private async Task<bool> EntityExists(int id)
+        {
+            return await _context.<#= EntityName #>.AnyAsync(e => e.Id == id);
+        }
+    }
+}

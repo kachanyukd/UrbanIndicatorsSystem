@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: urban-indicators-db
+    environment:
+      POSTGRES_DB: urbanindicators
+      POSTGRES_USER: urbanuser
+      POSTGRES_PASSWORD: urban_password_2025
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - urban-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urbanuser -d urbanindicators"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: urban-indicators-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - urban-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # Web Application
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: urban-indicators-app
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080;https://+:8081
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=urbanindicators;Username=urbanuser;Password=urban_password_2025
+      - ConnectionStrings__RedisConnection=redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - urban-network
+    restart: unless-stopped
+    volumes:
+      - ./wwwroot:/app/wwwroot:ro
+
+  # Code Generator Service (run once)
+  codegen:
+    build:
+      context: .
+      dockerfile: Dockerfile.codegen
+    container_name: urban-indicators-codegen
+    volumes:
+      - ./Generated:/app/Generated
+      - ./CodeGeneration/EntityConfiguration.json:/app/CodeGeneration/EntityConfiguration.json:ro
+    networks:
+      - urban-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  urban-network:
+    driver: bridge

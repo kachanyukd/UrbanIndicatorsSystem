@@ -1,0 +1,49 @@
+{
+  "namespace": "UrbanIndicatorsSystem",
+  "outputDirectory": "../Generated",
+  "entities": [
+    {
+      "name": "Area",
+      "dbSetName": "Areas",
+      "properties": [
+        { "name": "Id", "type": "int", "isPrimaryKey": true },
+        { "name": "Name", "type": "string", "maxLength": 100, "isRequired": true }
+      ],
+      "relationships": [
+        { "name": "TrafficData", "type": "Collection", "relatedEntity": "TrafficData" }
+      ],
+      "generateController": true,
+      "generateService": true,
+      "generateDto": true
+    },
+    {
+      "name": "TrafficData",
+      "dbSetName": "TrafficData",
+      "properties": [
+        { "name": "Id", "type": "int", "isPrimaryKey": true },
+        { "name": "RoadName", "type": "string", "maxLength": 200, "isRequired": true },
+        { "name": "TrafficLevel", "type": "string", "maxLength": 50, "isRequired": true },
+        { "name": "AreaId", "type": "int", "isForeignKey": true },
+        { "name": "Timestamp", "type": "DateTime", "isRequired": true }
+      ],
+      "relationships": [
+        { "name": "Area", "type": "Reference", "relatedEntity": "Area" }
+      ],
+      "generateController": true,
+      "generateService": true,
+      "generateDto": true
+    }
+  ],
+  "apiVersions": [
+    {
+      "version": "1.0",
+      "entities": ["TrafficData"],
+      "format": "simple"
+    },
+    {
+      "version": "2.0",
+      "entities": ["TrafficData"],
+      "format": "detailed"
+    }
+  ]
+}

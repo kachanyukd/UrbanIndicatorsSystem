@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using StackExchange.Redis;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,8 +32,11 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 // ========================
 // 2) BUSINESS DB → POSTGRES
 // ========================
-builder.Services.AddDbContext<TrafficDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+if (builder.Environment.EnvironmentName != "Test")
+{
+    builder.Services.AddDbContext<TrafficDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+}
 
 // ========================
 // 3) REDIS (Session + Cache)
@@ -58,6 +62,14 @@ if (builder.Configuration.GetSection("Redis").GetValue<bool>("Enabled"))
     });
 }
 
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(2, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+}).AddMvc();
+
 // ========================
 // DISCOVERY + CONTROLLERS
 // ========================
@@ -69,7 +81,37 @@ builder.Services.AddSwaggerGen();
 // BUSINESS LOGIC
 builder.Services.AddScoped<ITrafficService, TrafficService>(); // now will use TrafficDbContext
 
+// Реєструємо фоновий сервіс тільки не в тестовому режимі
+if (builder.Environment.EnvironmentName != "Test")
+{
+    builder.Services.AddHostedService<TrafficUpdateService>();
+}
+
 var app = builder.Build();
+
+// Seed data only if not running tests
+if (app.Environment.EnvironmentName != "Test")
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var trafficContext = scope.ServiceProvider.GetRequiredService<TrafficDbContext>();
+        trafficContext.Database.EnsureCreated();
+        
+        if (!trafficContext.Areas.Any())
+        {
+            var area = new Area { Name = "Downtown" };
+            trafficContext.Areas.Add(area);
+            trafficContext.SaveChanges();
+            
+            trafficContext.TrafficData.AddRange(
+            new TrafficData { RoadName = "Main Street", TrafficLevel = "High", AreaId = area.Id, Timestamp = DateTime.Now },
+            new TrafficData { RoadName = "Broadway", TrafficLevel = "Medium", AreaId = area.Id, Timestamp = DateTime.Now },
+            new TrafficData { RoadName = "5th Avenue", TrafficLevel = "Low", AreaId = area.Id, Timestamp = DateTime.Now }
+        );
+        trafficContext.SaveChanges();
+        }
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -92,3 +134,5 @@ app.MapRazorPages();
 app.MapGet("/", () => Results.Redirect("/Index"));
 
 app.Run();
+
+public partial class Program { }
