@@ -1,0 +1,126 @@
+@page
+@model UrbanIndicatorsSystem.Pages.TrafficV2Model
+@{
+    ViewData["Title"] = "Traffic Monitor (API v2)";
+}
+
+<link rel="stylesheet" href="~/styles.css">
+
+<div id="clock"></div>
+
+<h1>Traffic Monitor - Version 2 (Detailed)</h1>
+
+<button id="simulate-btn" class="btn btn-primary" style="margin-bottom: 20px;">Simulate Traffic</button>
+
+<hr>
+
+<div id="traffic-container-v2"></div>
+
+@section Scripts {
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('uk-UA');
+            document.getElementById('clock').textContent = `${timeString}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function getTrafficColor(level) {
+            switch(level.toLowerCase()) {
+                case 'low': return 'green';
+                case 'comfortable': return 'green';
+                case 'moderate': return 'orange';
+                case 'medium': return 'orange';
+                case 'high': return 'red';
+                default: return 'gray';
+            }
+        }
+
+        async function loadTrafficV2() {
+            try {
+                console.log('Fetching traffic data from v2.0 API...');
+                const response = await fetch('/api/v2.0/traffic');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+                
+                const container = document.getElementById("traffic-container-v2");
+                container.innerHTML = "";
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = "<p>No traffic data available. Click 'Simulate Traffic' to generate data.</p>";
+                    return;
+                }
+                
+                container.style.display = 'grid';
+                container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+                container.style.gap = '20px';
+                container.style.padding = '20px 0';
+                
+                data.forEach(item => {
+                    const card = document.createElement("div");
+                    card.style.backgroundColor = 'white';
+                    card.style.padding = '20px';
+                    card.style.borderRadius = '10px';
+                    card.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    card.style.textAlign = 'center';
+                    card.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                    
+                    card.onmouseenter = function() {
+                        this.style.transform = 'translateY(-5px)';
+                        this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    };
+                    card.onmouseleave = function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    };
+                    
+                    const color = getTrafficColor(item.trafficLevel);
+                    
+                    card.innerHTML = `
+                        <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">${item.roadName}</h3>
+                        <p style="color: ${color}; font-weight: bold; margin: 10px 0;">
+                            Traffic level: ${item.trafficLevel}
+                        </p>
+                        <p style="font-size: 0.9em; color: #666; margin: 5px 0;">
+                            Area: ${item.area || 'N/A'}
+                        </p>
+                        <p style="font-size: 0.85em; color: #999; margin: 5px 0;">
+                            ${new Date(item.timestamp).toLocaleString('uk-UA')}
+                        </p>
+                        <p style="font-size: 0.8em; color: #ccc; margin: 5px 0;">
+                            ID: ${item.id}
+                        </p>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading traffic data:', error);
+                document.getElementById("traffic-container-v2").innerHTML = 
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+        
+        document.getElementById('simulate-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/v2.0/traffic/simulate', { method: 'POST' });
+                if (response.ok) {
+                    alert('Traffic simulated!');
+                    loadTrafficV2();
+                }
+            } catch (error) {
+                console.error('Error simulating traffic:', error);
+                alert('Error simulating traffic: ' + error.message);
+            }
+        });
+        
+        loadTrafficV2();
+        setInterval(loadTrafficV2, 5000);
+    </script>
+}
