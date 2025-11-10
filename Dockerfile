@@ -4,17 +4,23 @@ WORKDIR /src
 
 # Copy csproj and restore dependencies
 COPY ["UrbanIndicatorsSystem.csproj", "./"]
+COPY ["CodeGeneration/CodeGenerator.csproj", "CodeGeneration/"]
 RUN dotnet restore "UrbanIndicatorsSystem.csproj"
 
 # Copy source code
 COPY . .
 
+# Clean obj folders to avoid conflicts
+RUN rm -rf obj/*/
+RUN rm -rf CodeGeneration/obj/*/
+
 # Generate code before build
 WORKDIR /src/CodeGeneration
-RUN dotnet run --project CodeGenerator.csproj
+RUN dotnet run --project CodeGenerator.csproj --configuration Release
 
-# Build application
+# Build application (skip obj folder cleanup)
 WORKDIR /src
+RUN dotnet clean "UrbanIndicatorsSystem.csproj" -c Release
 RUN dotnet build "UrbanIndicatorsSystem.csproj" -c Release -o /app/build
 
 # Publish stage
