@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UrbanIndicatorsSystem.Data;
 
 #nullable disable
 
-namespace _.Migrations
+namespace UrbanIndicatorsSystem.Data.TrafficMigrations
 {
     [DbContext(typeof(TrafficDbContext))]
-    partial class TrafficDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251110125627_InitialTrafficSchema")]
+    partial class InitialTrafficSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

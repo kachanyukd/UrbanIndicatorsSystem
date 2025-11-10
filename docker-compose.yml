@@ -1,14 +1,12 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: urban-indicators-db
     environment:
-      POSTGRES_DB: urbanindicators
-      POSTGRES_USER: urbanuser
-      POSTGRES_PASSWORD: urban_password_2025
+      POSTGRES_DB: urban
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +14,7 @@ services:
     networks:
       - urban-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U urbanuser -d urbanindicators"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d urban"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,9 +47,17 @@ services:
       - "5001:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080;https://+:8081
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=urbanindicators;Username=urbanuser;Password=urban_password_2025
-      - ConnectionStrings__RedisConnection=redis:6379
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Sqlite=Data Source=/app/data/app.db;Cache=Shared
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=urban;Username=postgres;Password=123
+      - Redis__Enabled=true
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - Redis__InstanceName=UrbanIndicators_
+      - TrafficUpdate__Enabled=true
+      - TrafficUpdate__IntervalSeconds=15
+    volumes:
+      - sqlite_data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,27 +66,19 @@ services:
     networks:
       - urban-network
     restart: unless-stopped
-    volumes:
-      - ./wwwroot:/app/wwwroot:ro
-
-  # Code Generator Service (run once)
-  codegen:
-    build:
-      context: .
-      dockerfile: Dockerfile.codegen
-    container_name: urban-indicators-codegen
-    volumes:
-      - ./Generated:/app/Generated
-      - ./CodeGeneration/EntityConfiguration.json:/app/CodeGeneration/EntityConfiguration.json:ro
-    networks:
-      - urban-network
-    profiles:
-      - tools
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
 volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  sqlite_data:
     driver: local
 
 networks:
